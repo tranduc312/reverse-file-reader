@@ -1,0 +1,9 @@
+!**/src/main/**/target/
+!**/src/test/**/target/
+.classpath
+.project
+.settings/
+target/
+
+### IntelliJ IDEA ###
+.idea
