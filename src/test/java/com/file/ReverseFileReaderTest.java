@@ -16,51 +16,51 @@ public class ReverseFileReaderTest {
 
     @Test
     public void testReadLine() throws IOException {
-        String testFile = TEST_DIRECTORY + "file.txt";
-        try (PrintWriter writer = new PrintWriter(new FileWriter(testFile))) {
+        String testFilePath = TEST_DIRECTORY + "file.txt";
+        try (PrintWriter writer = new PrintWriter(new FileWriter(testFilePath))) {
             writer.println("abc def");
             writer.println("ghi jkl");
             writer.println("mno pqr");
         }
-        try (ReverseFileReader reader = new ReverseFileReader(testFile)) {
+        try (ReverseFileReader reader = new ReverseFileReader(testFilePath)) {
             assertEquals("mno pqr", reader.readLine());
             assertEquals("ghi jkl", reader.readLine());
             assertEquals("abc def", reader.readLine());
             assertNull(reader.readLine()); // End of file
         } finally {
-            new File(testFile).delete();
+            new File(testFilePath).delete();
         }
     }
 
     @Test
     public void testLargeFile() throws IOException {
-        String largeFile = TEST_DIRECTORY + "large-file.txt";
+        String largeFilePath = TEST_DIRECTORY + "large-file.txt";
         // Create a large file with 1 million lines
-        try (PrintWriter writer = new PrintWriter(new FileWriter(largeFile))) {
+        try (PrintWriter writer = new PrintWriter(new FileWriter(largeFilePath))) {
             for (int i = 1; i <= 1_000_000; i++) {
                 writer.println("Line " + i);
             }
         }
-        try (ReverseFileReader reader = new ReverseFileReader(largeFile)) {
+        try (ReverseFileReader reader = new ReverseFileReader(largeFilePath)) {
             for (int i = 1_000_000; i >= 1; i--) {
                 assertEquals("Line " + i, reader.readLine());
             }
             assertNull(reader.readLine());
         } finally {
-            new File(largeFile).delete();
+            new File(largeFilePath).delete();
         }
     }
 
     @Test
     public void testEmptyFile() throws IOException {
-        String emptyFile = TEST_DIRECTORY + "empty-file.txt";
-        try (PrintWriter writer = new PrintWriter(new FileWriter(emptyFile))) {
+        String emptyFilePath = TEST_DIRECTORY + "empty-file.txt";
+        try (PrintWriter writer = new PrintWriter(new FileWriter(emptyFilePath))) {
             // Write nothing to create an empty file
         }
-        try (ReverseFileReader reader = new ReverseFileReader(emptyFile)) {
+        try (ReverseFileReader reader = new ReverseFileReader(emptyFilePath)) {
             assertNull(reader.readLine()); // Should return null for an empty file
         } finally {
-            new File(emptyFile).delete();
+            new File(emptyFilePath).delete();
         }
     }
 
@@ -71,24 +71,20 @@ public class ReverseFileReaderTest {
     }
 
     @Test(expected = IOException.class)
-    public void testIOExceptionDuringRead() throws IOException {
-        String errorFilePath = TEST_DIRECTORY + "error-file.txt";
-        try (PrintWriter writer = new PrintWriter(new FileWriter(errorFilePath))) {
-            writer.println("test");
+    public void testIOExceptionOnClosedFile() throws IOException {
+        String ioExceptionFilePath = TEST_DIRECTORY + "ioexception.txt";
+        try (PrintWriter writer = new PrintWriter(new FileWriter(ioExceptionFilePath))) {
+            writer.println("This is a test file.");
         }
 
-        try (ReverseFileReader reader = new ReverseFileReader(errorFilePath)) {
-            // Simulate a scenario where an IOException might occur during read
-            File file = new File(errorFilePath);
-            boolean isSuccess = file.setReadable(false);
-            if (!file.setReadable(false)) {
-                fail("Could not set file to unreadable.");
-            }
-            reader.readLine(); // This should throw an IOException
+        ReverseFileReader reader = new ReverseFileReader(ioExceptionFilePath);
+        reader.close(); // Close the file to simulate IOException on read
+
+        try {
+            reader.readLine();
         } finally {
             // Clean up
-            new File(errorFilePath).setReadable(true); // Reset the file permissions
-            new File(errorFilePath).delete();
+            new File(ioExceptionFilePath).delete();
         }
     }
 
